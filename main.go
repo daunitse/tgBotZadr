@@ -117,26 +117,34 @@ func handleUpdate(upd telego.Update, db *database, bot *telego.Bot) {
 		return
 	}
 
-	switch {
-	case upd.Message.Chat.Type == privateCHat && role == bomzRole:
-		unknownUserMessageCase(bot, upd, chatID)
-		return
-	case m == "/start":
-		sendKeyboardMessage(bot, chatID, m)
-		return
-	case m == "/stats":
-		statsMessagesWithoutReset(bot, db, chatID, role)
-		return
-	case m == "хочу играть" || m == "не хочу играть":
-		letsPlay(bot, db, chatID, groupID, userID, m)
-		return
-	case upd.Message.ReplyToMessage != nil && m == "user":
+	if upd.Message.Chat.Type == privateCHat {
+		switch {
+		case upd.Message.Chat.Type == privateCHat && role == bomzRole:
+			unknownUserMessageCase(bot, upd, chatID)
+			return
+		case m == "/start":
+			sendKeyboardMessage(bot, chatID, m)
+			return
+		case m == "/stats":
+			statsMessagesWithoutReset(bot, db, chatID, role)
+			return
+		case m == "хочу играть" || m == "не хочу играть":
+			letsPlay(bot, db, chatID, groupID, userID, m)
+			return
+		case upd.Message.ReplyToMessage != nil && m == "user":
+			giveUserRole(bot, upd, db, role, chatID)
+			return
+
+		default:
+			return
+		}
+	}
+	if upd.Message.ReplyToMessage != nil && m == "user" {
 		giveUserRole(bot, upd, db, role, chatID)
 		return
-
-	default:
-		return
 	}
+
+	return
 }
 
 func sendMessage(bot *telego.Bot, ChatID int64, text string) error {
